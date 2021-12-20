@@ -29,7 +29,7 @@ def create_short_url(event):
     # Parse targetUrl
     target_url = event["queryStringParameters"]["targetUrl"]
     keys = event["queryStringParameters"].keys()
-
+    
     if "id" in keys:
         id = event["queryStringParameters"]["id"]
         

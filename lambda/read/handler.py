@@ -14,7 +14,7 @@ def main(event,context):
 
   
     return read_short_url(event)
-    
+
 
 def read_short_url(event):
     # Parse redirect ID from path

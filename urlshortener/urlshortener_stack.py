@@ -19,6 +19,18 @@ class UrlshortenerStack(core.Stack):
         user_name = appdetails["user"]
         domain_name = subdomain + "." + ZONE_NAME
 
+
+        ####
+        # Was brauchen wir für einen URL Shortener?
+        # 1. URLs zu generieren aus Ziel-URLs (authentifiziert -> nicht "öffentlich")
+        # 2. Die müssen wir irgendwo speichern
+        # 3. Lookup Function -> short-url mit redirect zu original url
+        # 
+        # Zum Beispiel: https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html
+        # möchte ich mit go.droptableuser.me/GettingStartedAWS aufrufen können
+        #
+        ##
+
         # define the table that maps short codes to URLs.
         table = aws_dynamodb.Table(self, "Table",
                                    partition_key=aws_dynamodb.Attribute(
@@ -33,7 +45,7 @@ class UrlshortenerStack(core.Stack):
                                                "./lambda/read"),
                                            handler="handler.main",
                                            timeout=Duration.minutes(5),
-                                           runtime=aws_lambda.Runtime.PYTHON_3_7)
+                                           runtime=aws_lambda.Runtime.PYTHON_3_9)
 
         read_handler.add_environment('TABLE_NAME', table.table_name)
         table.grant_read_data(read_handler)
@@ -50,13 +62,11 @@ class UrlshortenerStack(core.Stack):
         read_integration = aws_apigateway.LambdaIntegration(read_handler)
         write_integration = aws_apigateway.LambdaIntegration(write_handler)
 
-        api = api = aws_apigateway.RestApi(
+        api = aws_apigateway.RestApi(
             self, app_id+"Api", default_integration=read_integration)
-        
-        reader = api.root.add_resource("{proxy+}")
-        reader.add_method("ANY",read_integration)
-
-        writer = api.root.add_resource("targetUrl")
+    
+        # API /create?targetURL=$URL
+        writer = api.root.add_resource("create")
         writer_get = writer.add_method("GET", write_integration,
                                        authorization_type=aws_apigateway.AuthorizationType.IAM,
                                        api_key_required=False)
@@ -64,9 +74,10 @@ class UrlshortenerStack(core.Stack):
                                         authorization_type=aws_apigateway.AuthorizationType.IAM,
                                         api_key_required=False)
 
+        #already existing user
         iam_user = aws_iam.User.from_user_name(self,app_id+"User",user_name)
-
-        iam_user.attach_inline_policy(aws_iam.Policy(self, "AllowBooks",
+        
+        iam_user.attach_inline_policy(aws_iam.Policy(self, app_id+"CreateURL",
                                                      statements=[
                                                          aws_iam.PolicyStatement(
                                                              actions=[
@@ -77,6 +88,9 @@ class UrlshortenerStack(core.Stack):
                                                          )
                                                      ]
                                                      ))
+
+        reader = api.root.add_resource("{proxy+}")
+        reader.add_method("ANY",read_integration)
 
         hosted_zone = aws_route53.HostedZone.from_lookup(
             self, app_id+"HostedZone", domain_name=ZONE_NAME)
