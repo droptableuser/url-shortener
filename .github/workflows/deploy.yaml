@@ -1,4 +1,7 @@
-name: CD
+name: deployment
+
+on:
+  workflow_dispatch:
 
 jobs:
   deploy:
