@@ -1,1 +1,5 @@
 -e .
+aws-cdk.aws-dynamodb==1.136.0
+aws-cdk.aws_apigateway==1.136.0
+aws-cdk.aws_route53_targets==1.136.0
+boto3==1.20.24

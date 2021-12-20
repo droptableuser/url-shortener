@@ -19,7 +19,7 @@ setuptools.setup(
     packages=setuptools.find_packages(where="urlshortener"),
 
     install_requires=[
-        "aws-cdk.core==1.89.0",
+        "aws-cdk.core==1.136.0",
     ],
 
     python_requires=">=3.6",
